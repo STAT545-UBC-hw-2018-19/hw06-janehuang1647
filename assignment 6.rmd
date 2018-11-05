@@ -1,7 +1,11 @@
 ---
 title: "assignment 6"
-output: github_document
+output: 
+github_document:
+    toc: true
+    toc_depth: 4
 ---
+
 
 # Writing Functions
 
@@ -16,7 +20,208 @@ suppressPackageStartupMessages(library(ggmap))
 suppressPackageStartupMessages(library(singer)) 
 ```
 
+
+
+# Task 1 Character Data
+
+In this task, I have read and worked the exercises in the __Strings chapter__ or R for Data Science.
+
+First we will load the library needed for this exercise
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+library(stringr)
+```
+
+## 14.2.5 Exrercise 
+
+1. In code that doesn’t use stringr, you’ll often see `paste()` and `paste0()`. What’s the difference between the two functions? What stringr function are they equivalent to? How do the functions differ in their handling of NA?
+
+We try to see the difference of these two functions by simple examples.
+```{r}
+paste("Merry","Christmas")
+paste0("Merry","Christmas")
+```
+We can clearly see that if we use `paste()` to combine two strings, it will return a combined string with a space in between each string, while using `paste0()` return a combined string with no space in between.
+
+The `paste0()` is equavalent to the `str_c()` function, we can prove this by the following example:
+we first use the function `paste0()` and also look at the structure of the result.
+```{r}
+(ex1 <- paste0("hello","world"))
+str(ex1)
+```
+Then we perform the same thing with `str_c()`, which return the same result with the same structure.
+```{r}
+(ex2 <- str_c("hello","world"))
+str(ex2)
+```
+
+To get the equavalent results with the function `paste()`, we can perform it with the `str_c()` function again:
+Here is the `paste()`
+```{r}
+(ex3 <- paste("hello","world"))
+str(ex3)
+```
+And now compare with the `str_c()`, separated with a space
+```{r}
+(ex4 <- str_c("hello","world", sep = " "))
+str(ex4)
+```
+
+Handle with NA:
+
+While using `paste()` and `paste0()`, in this case it returns a string with the NA append to it.
+```{r}
+paste("hello","world",NA)
+paste0("hello","world", NA)
+```
+If we put the NA at the front of the string, it has the similar results
+```{r}
+paste(NA,"hello","world")
+paste0(NA,"hello","world")
+```
+
+For `str_c()` function, the result is shown below:
+```{r}
+str_c("hello","world", NA,sep = " ")
+str_c(NA,"hello","world", sep = " ")
+```
+If there is one string which is NA, then the `str_c()` function will return the NA.
+
+
+
+2. In your own words, describe the difference between the `sep` and `collapse` arguments to `str_c()`
+In brief, `collapse` is used to combined vectors of strings while `sep` is used to combined two or more strings. This can be better illustrated by an example.
+```{r}
+str_c(c("a", "b", "c"), collapse= "&")
+str_c("a","b","c",sep= ",")
+```
+we can also use `collapse` and `sep` together:
+by repeating the string `apple` and combined it with each element in the vector.
+```{r}
+str_c(c("I","He","She"), "apple",  sep= " ate ", collapse = " & " )
+```
+
+3. Use str_length() and str_sub() to extract the middle character from a string. What will you do if the string has an even number of characters?
+we can use some simple maths to achieve this:
+for odd number:
+```{r}
+num <- str_length("paparazzi")
+str_sub("paparazzi",ceiling(num/2),ceiling(num/2))
+
+```
+for even number:
+```{r}
+num1 <- str_length("baseball")
+str_sub("baseball",(num1/2), (num1/2+1))
+
+```
+This will return the middle 2 characters.
+
+
+## 14.3.1.1 Exercises
+
+1. Explain why each of these strings don’t match a \: "\", "\\", "\\\".
+To explore this, we can look at the below example, so a single "\" don't match since a single backslash symbol is used to escape special behaviour.
+Since \ is used as the escape character, then first we need to use a \ to escape it to form a regular expression \\. Then if we create a string we need to use the escape \ again. So overall we will need 4 backslashs
+
+```{r}
+str_view(c("abc", "a.c", "a\\c","\\"), "\\\\")
+```
+so in breif, `\\` for the normal expression `\`, then extra `\` to escape the special function, then last `\` used to create a new string, then overall 4 `\`.
+
+2.How would you match the sequence "'\?
+first we create a string with this sequence, then we try to match it:
+```{r}
+x <- "\"\'\\"
+writeLines(x)
+
+str_view(x, "\\\"\\'\\\\") 
+
+```
+the first three backslash is to escape the special behabiour of " and create a string, then middle 2 is for the string `'` and the last 4 backslashs are used to create `\`.
+
+## 14.3.2.1 Exercises
+
+1, How would you match the literal string "$^$"?
+again, first we create the string: ```
+each `\\` is used to create the string and escape its special functions.
+```{r}
+x1 <- "$^$"
+writeLines(x1)
+str_view(x1, "\\$\\^\\$")
+```
+
+2. Given the corpus of common words in stringr::words, create regular expressions that find all words that:
+
+* Start with “y”.
+
+```{r}
+str_view(stringr::words, pattern = "^y", match = TRUE)
+```
+
+* End with “x”
+
+```{r}
+str_view(stringr::words, pattern = "x$", match = TRUE)
+```
+
+* Are exactly three letters long. (Don’t cheat by using str_length()!)
+```{r}
+# since there are too many word which satisfy this condition, we are going to show only some of them
+str_view(stringr::words[1:50], pattern = "^.{3}$", match = TRUE)
+```
+
+* Have seven letters or more.
+
+```{r}
+# this can be used to return certain length of strings
+str_view(stringr::words[1:50], pattern = "^.{4,7}$", match = TRUE)
+# leave the second argument blank to return seven letter or more
+str_view(stringr::words[1:50], pattern = "^.{7,}$", match = TRUE)
+
+```
+
+
+## 14.3.3.1 Exercises
+1. Create regular expressions to find all words that:
+
+we can assess the same data set stringr::words. 
+
+*Start with a vowel.
+```{r}
+str_view(stringr::words[1:50], "^[aeiou]", match = TRUE)
+```
+
+
+*That only contain consonants. (Hint: thinking about matching “not”-vowels.)
+that means we do not want any vowel in the words, then we can search for words with vowel and set match to be FALSE.
+```{r}
+str_view(stringr::words[1:400], "[aeiou]", match = FALSE)
+```
+
+
+*End with ed, but not with eed.
+```{r}
+str_view(stringr::words, "[^e]ed$", match = TRUE)
+```
+
+
+*End with ing or ise.
+```{r}
+str_view(stringr::words, "ise$|ing$", match = TRUE)
+```
+
+
+
+
+
+
+
+
 ##Task 2
+
+
 __1__
 First we extract the data for Canada to work on the code
 ```{r}
