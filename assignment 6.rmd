@@ -1,0 +1,90 @@
+---
+title: "assignment 6"
+output: github_document
+---
+
+# Writing Functions
+
+```{r}
+suppressPackageStartupMessages(library(gapminder))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ggplot2)) 
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(MASS))
+suppressPackageStartupMessages(library(singer))
+suppressPackageStartupMessages(library(ggmap))
+suppressPackageStartupMessages(library(singer)) 
+```
+
+##Task 2
+__1__
+First we extract the data for Canada to work on the code
+```{r}
+chosen_country <- "Canada"
+(chosen_data <- gapminder %>% 
+  filter(country == chosen_country))
+```
+Then we plot the graph of gdp per capita against population
+and we can use a polynomial function instead of a linear function to better fit the data. 
+```{r}
+p <- ggplot(chosen_data, aes(x = pop, y = gdpPercap))
+p + geom_point() + geom_smooth(method = 'lm', se = FALSE)
+```
+
+We fit the data with a cubic function, and the coefficient of x with different degree is shown: 
+```{r}
+cub_fit <- rlm(gdpPercap ~ year+I(year^2)+I(year^3),chosen_data)
+coef(cub_fit)
+```
+we can then use then plot the cubic function 
+```{r}
+ curve(predict(cub_fit,data.frame(year=x)),col='blue',lwd=2) 
+```
+
+
+Then we now sum up the above codes to become a function and try out the data above:
+with the below function, by inputing the corresponding country name, we could get the cubic regression for the gdp per capita against population for this country.
+
+```{r}
+cubic_curve_fit  <-  function (chosen_country){
+  chosen_data <- gapminder %>% 
+  filter(country == chosen_country)
+  
+  fit_curve <- rlm(gdpPercap ~ year+I(year^2)+I(year^3), chosen_data)
+  setNames(coef(fit_curve),c("intercept","x","x^2","x^3"))
+}
+
+cubic_curve_fit("Canada")
+```
+
+Again we can try to use this on other countries:
+```{r}
+cubic_curve_fit("France")
+cubic_curve_fit("Afghanistan")
+cubic_curve_fit("Japan")
+```
+
+
+## Task 4 Work With the `singer` data
+
+__Use purrr to map latitude and longitude into human readable information on the band’s origin places.__
+
+First, we use head() function to visulise the singer_location dataframe. We realised that there are quite a lot of `NA` appeared in the entry. We need to get rid of these before tidy up the data. 
+```{r}
+head(singer_locations)
+```
+```{r}
+tidy_data <- singer_locations %>% 
+  filter(!is.na(latitude)|!is.na(longitude)|!is.na(city)) %>% 
+  dplyr::select(name,city,longitude,latitude)
+# while we load the library MASS together with the dplyr, we need to use dplyr::select to call this function
+head(tidy_data) %>% 
+  knitr::kable()
+```
+next we are going to map the longitude and latitude to the band's origin place, and the function used in the mapping is `map2()` and the `revgeocode()` from `ggmap` is used to reverse a geo code location using Google Maps.
+```{r}
+
+# location <- map2_chr(tidy_data$longitude[30:100],tidy_data$latitude[30:100], ~revgeocode(as.numeric(c(.x,.y)), output ="more" , source = "google"))
+```
+
+
