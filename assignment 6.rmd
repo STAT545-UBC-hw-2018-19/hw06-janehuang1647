@@ -502,7 +502,7 @@ chosen_country <- "Canada"
 ```
 Then we plot the graph of gdp per capita against population
 and we can use a polynomial function instead of a linear function to better fit the data. 
-```{r, polynomial function}
+```{r, polynomial function(built in)}
 p <- ggplot(chosen_data, aes(x = pop, y = gdpPercap))
 p + geom_point() + geom_smooth(method = 'lm', se = FALSE)
 ```
@@ -513,7 +513,7 @@ cub_fit <- rlm(gdpPercap ~ year+I(year^2)+I(year^3),chosen_data)
 coef(cub_fit)
 ```
 we can then use then plot the cubic function 
-```{r}
+```{r, CUBIC function for prediction}
  curve(predict(cub_fit,data.frame(year=x)),col='blue',lwd=2) 
 ```
 
