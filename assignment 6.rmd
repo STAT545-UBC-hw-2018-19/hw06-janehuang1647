@@ -11,8 +11,6 @@ output:
 ---
 
 
-# Writing Functions
-
 ```{r}
 suppressPackageStartupMessages(library(gapminder))
 suppressPackageStartupMessages(library(tidyverse))
@@ -274,7 +272,7 @@ str_view("{apple}","\\{.+\\}", match = TRUE)
 
 we use the following to match words starting with at least three consonants
 ```{r}
-str_view(stringr::words, pattern = "^[^aeiou]{3,}", match = TRUE)
+str_view(stringr::words[1:400], pattern = "^[^aeiou]{3,}", match = TRUE)
 ```
 
 * Have three or more vowels in a row.
@@ -285,7 +283,7 @@ str_view(stringr::words, pattern = "[aeiou]{3,}", match = TRUE)
 
 * Have two or more vowel-consonant pairs in a row.
 ```{r}
-str_view(stringr::words, pattern = "[aeiou][^aeiou]{2,}", match = TRUE)
+str_view(stringr::words[1:50], pattern = "[aeiou][^aeiou]{2,}", match = TRUE)
 ```
 
 ## 14.3.5.1 Exercises
@@ -346,14 +344,16 @@ stringr::words %>%
 * Find all words that start with a vowel and end with a consonant.
 ```{r}
 # single regular expression
-str_view_all(stringr::words, "^[aeiou].*[^aeiou]$", match = TRUE)
+sin <- str_subset(stringr::words, "^[aeiou].*[^aeiou]$") %>% 
+  head(20)
+knitr::kable(sin)
 
 # multiple expression
 st <- str_detect(stringr::words, pattern = "^[aeiou]")
 end <- str_detect(stringr::words, pattern = "[^aeiou]$")
 # find subset that start or end with x
 stringr::words %>% 
-  `[`(st | end) %>% 
+  `[`(st & end) %>% 
   head()
 
 ```
@@ -361,54 +361,8 @@ stringr::words %>%
 
 * Are there any words that contain at least one of each different vowel?
 ```{r}
-str_view(stringr::words, pattern = "[aeiou].*[aeiou]", match = TRUE)
+str_view(stringr::words[1:100], pattern = "[aeiou].*[aeiou]", match = TRUE)
 ```
-
-
-
-## 14.4.3.1 Exercises
-
-1. In the previous example, you might have noticed that the regular expression matched “flickered”, which is not a colour. Modify the regex to fix the problem.
-
-since the regular expression including the keyword `red` which will matched "flickered".
-
-```{r}
-colours <- c("red", "orange", "yellow", "green", "blue", "purple")
-colour_match <- str_c(colours, collapse = "|")
-colour_match
-
-has_colour <- str_subset(sentences, colour_match)
-matches <- str_extract(has_colour, colour_match)
-
-head(matches)
-
-# view sentences with more than 1 match
-more <- sentences[str_count(sentences, colour_match) > 1]
-str_view_all(more, colour_match)
-```
-
-
-
-
-
-## 14.4.4.1 Exercises
-
-1. Find all words that come after a “number” like “one”, “two”, “three” etc. Pull out both the number and the word.
-
-```{r}
-tibble(sentence = sentences) %>% 
-  tidyr::extract(
-    sentence, c("article", "noun"), "(a|the) ([^ ]+)", 
-    remove = FALSE
-  )
-```
-
-2. Find all contractions. Separate out the pieces before and after the apostrophe.
-
-```{r}
-
-```
-
 
 ## 14.4.5.1 Exercises
 
@@ -431,16 +385,6 @@ str_replace_all(sample,
 ```
 
 
-3. Switch the first and last letters in words. Which of those strings are still words?
-```{r}
-temp <- c("banana","apple","strawberry")
-str_replace(temp,"(^[a-zA-Z])([a-zA-Z]*)([a-zA-Z]$)", \\3\\2\\1)
-
-
-sentences %>% 
-  str_replace("([^ ]+) ([^ ]+) ([^ ]+)", "\\1 \\3 \\2") %>% 
-  head(5)
-```
 
 
 
@@ -477,29 +421,79 @@ str_view_all(sample_string, " ")
 
 3. What does splitting with an empty string ("") do? Experiment, and then read the documentation.
 
+Here we apply this to the same example:
+As seen from the below example, if we split by the empty string "", then the string is split into individual character. In addition, according to the Documentation, `Match character, word, line and sentence boundaries with boundary(). An empty pattern, "", is equivalent to boundary("character").` So this can be used to split the string into each single character as shown below.
+
+```{r}
+sample_string <- c("apple, pear, and bananas")
+(str_split(sample_string, "")[[1]]) %>% 
+  knitr::kable(col.names = "split component")
+```
+
 
 ## 14.5.1 Exercises
 
 1. How would you find all strings containing \ with regex() vs. with fixed()?
 
-2. What are the five most common words in sentences?
+We will first create a test string and apply both method to this string to compare the results:
+for regex() we need to use "\\\\" to escape the backslash behaviour while the for fixed() we only need to use "\\"
+```{r}
+# using `regex()`
+x <- c("male\\female","applebanana")
+str_view(x, regex(pattern = "\\\\"))
+
+# using `fixed()`
+str_detect(x, fixed(pattern = "\\"))
+# the TRUE means the first string in the vector returned a match.
+```
+
 
 
 
 ## 14.7.1 Exercises
 
 Find the stringi functions that:
+first we need to load the library first:
+```{r}
+suppressPackageStartupMessages(library(stringi))
+```
+
 
 1. Count the number of words.
+we use an example to explain this
+```{r}
+stri_count_words("How many words are in this sentence")
+# this returns a word count of 7.
+```
+
 2. Find duplicated strings.
+we can use stri_duplicated() to find the duplicated strings.
+we can see the outcome from the following example:
+```{r}
+stri_duplicated_any(c("a", "b", "a", NA, "a", NA)) # there are three duplicated character a, b and NA
+stri_duplicated(c("a", "b", "a", NA, "a", NA)) # This return whether the corresponding string is duplicated with the previous strings.
+```
+
 3. Generate random text.
+```{r}
+stri_rand_strings(5,10) 
+#this generate 5 strings of length 10
+```
+
 4. How do you control the language that stri_sort() uses for sorting?
+We can use the stri_opts_collator{} to generate a List with Collator Settings
+Lets try to sort it with German.
+```{r}
+test_german <- c("heute", "schlafen","morgen", "gut", "abend")
+stri_sort(test_german, german = TRUE)
+```
 
 
-#Task 2
+
+#Task 2  Writing Functions
 
 
-__1__
+
 First we extract the data for Canada to work on the code
 ```{r}
 chosen_country <- "Canada"
@@ -508,7 +502,7 @@ chosen_country <- "Canada"
 ```
 Then we plot the graph of gdp per capita against population
 and we can use a polynomial function instead of a linear function to better fit the data. 
-```{r}
+```{r, polynomial function}
 p <- ggplot(chosen_data, aes(x = pop, y = gdpPercap))
 p + geom_point() + geom_smooth(method = 'lm', se = FALSE)
 ```
