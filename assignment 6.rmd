@@ -1,9 +1,13 @@
 ---
 title: "assignment 6"
-output: 
-github_document:
+author: Zheni Huang
+date: November 5,2018
+output:
+  html_document:
+    keep_md: true
     toc: true
-    toc_depth: 4
+    toc_depth: 2
+    theme: readable
 ---
 
 
@@ -213,13 +217,286 @@ str_view(stringr::words, "ise$|ing$", match = TRUE)
 ```
 
 
+2. Empirically verify the rule “i before e except after c”.
+This indicates that the words with combination of `ie` or `cei` are way more than the one with  `ei` or `cie`
+```{r}
+str_view(stringr::words, pattern = "[^c]ie|cei", match = TRUE)
+str_view(stringr::words, pattern = "[^c]ei|cie", match = TRUE)
+
+```
+We can see from the above results that the combinaion of `ie` and `cei` are much more than the combination of `ei` and `cie`, which verify the rule.
+
+3. Is “q” always followed by a “u”?
+
+we try to return any words with a combination of q followed by a non-u letter: which returns no word. Therefore, we can concluded that the "q" is always followed by a "u".
+```{r}
+ str_subset(stringr::words, pattern = "q[^u]")
+```
+
+4. Write a regular expression that matches a word if it’s probably written in British English, not American English.
+
+in general, words like "analyse"(British) and "analyze"(American) has difference in "se"/"sa" and "ze"/"za". We create some test words to show this matching.
+
+```{r}
+test <- c("analyse","analyze","organization","organisation","realise","realize")
+# to match only British English,
+str_view(test, pattern = "sa|se", match = TRUE)
+```
+
+## 14.3.4.1 Exercises
+
+1. Describe the equivalents of ?, +, * in {m,n} form.
+
+This controlling how many times a pattern matches:
+`?` equivalent to `{,1}`
+`+` equivalent to `{1,}`
+`*` equivalent to `{0,}`
+
+2. Describe in words what these regular expressions match: (read carefully to see if I’m using a regular expression or a string that defines a regular expression.)
+
+* `^.*$` this can be used to match any string
+
+* "\\{.+\\}" this will match a string that with a {} around the string which is not empty. We can test this with the following:
+
+```{r}
+str_view("{apple}","\\{.+\\}", match = TRUE)
+```
+
+
+* \d{4}-\d{2}-\d{2} this will match a sries of number with the following format "1111-11-11".
+
+* "\\\\{4}" \\\\ represents a back slash, then \\\\{4} is used to match 4 backslashes.
+
+
+3. Create regular expressions to find all words that:
+
+* Start with three consonants.
+
+we use the following to match words starting with at least three consonants
+```{r}
+str_view(stringr::words, pattern = "^[^aeiou]{3,}", match = TRUE)
+```
+
+* Have three or more vowels in a row.
+```{r}
+str_view(stringr::words, pattern = "[aeiou]{3,}", match = TRUE)
+```
+
+
+* Have two or more vowel-consonant pairs in a row.
+```{r}
+str_view(stringr::words, pattern = "[aeiou][^aeiou]{2,}", match = TRUE)
+```
+
+## 14.3.5.1 Exercises
+
+1. Describe, in words, what these expressions will match:
+
+* (.)\1\1 this is used to matched an identical character appeared 3 times in a row.
+
+
+* "(.)(.)\\2\\1" this is matching a two character and the reverse of these two character, such as abba
+```{r}
+str_view(stringr::words, "(.)(.)\\2\\1", match = TRUE)
+```
+
+* (..)\1 this match two characters that appears twice such as abab format
+
+* "(.).\\1.\\1" match string with format such as "axaya"  3 repeated character in a row with 2 different inserted.
+* "(.)(.)(.).*\\3\\2\\1" match string with format such as "abc...cba" the character in between the "abc" and "cba" should have a length more than 0.
+
+2. Construct regular expressions to match words that:
+
+* Start and end with the same character.
+```{r}
+str_view(stringr::words,"^(.).*\\1$", match = TRUE)
+```
+
+
+* Contain a repeated pair of letters (e.g. “church” contains “ch” repeated twice.)
+```{r}
+str_view(stringr::words,"(.)(.)\\1\\2", match = TRUE)
+```
+
+
+* Contain one letter repeated in at least three places (e.g. “eleven” contains three “e”s.)
+```{r}
+str_view(stringr::words,"(.).*\\1.*\\1", match = TRUE)
+```
+
+
+## 14.4.2 Exercises
+
+1. For each of the following challenges, try solving it by using both a single regular expression, and a combination of multiple str_detect() calls.
+
+* Find all words that start or end with x.
+```{r}
+# single regular expression
+str_view_all(stringr::words, "x$|^x", match = TRUE)
+
+# combination of multiple expression
+st <- str_detect(stringr::words, pattern = "^x")
+end <- str_detect(stringr::words, pattern = "x$")
+# find subset that start or end with x
+stringr::words %>% 
+  `[`(st | end)
+```
+
+
+* Find all words that start with a vowel and end with a consonant.
+```{r}
+# single regular expression
+str_view_all(stringr::words, "^[aeiou].*[^aeiou]$", match = TRUE)
+
+# multiple expression
+st <- str_detect(stringr::words, pattern = "^[aeiou]")
+end <- str_detect(stringr::words, pattern = "[^aeiou]$")
+# find subset that start or end with x
+stringr::words %>% 
+  `[`(st | end) %>% 
+  head()
+
+```
+
+
+* Are there any words that contain at least one of each different vowel?
+```{r}
+str_view(stringr::words, pattern = "[aeiou].*[aeiou]", match = TRUE)
+```
+
+
+
+## 14.4.3.1 Exercises
+
+1. In the previous example, you might have noticed that the regular expression matched “flickered”, which is not a colour. Modify the regex to fix the problem.
+
+since the regular expression including the keyword `red` which will matched "flickered".
+
+```{r}
+colours <- c("red", "orange", "yellow", "green", "blue", "purple")
+colour_match <- str_c(colours, collapse = "|")
+colour_match
+
+has_colour <- str_subset(sentences, colour_match)
+matches <- str_extract(has_colour, colour_match)
+
+head(matches)
+
+# view sentences with more than 1 match
+more <- sentences[str_count(sentences, colour_match) > 1]
+str_view_all(more, colour_match)
+```
 
 
 
 
 
+## 14.4.4.1 Exercises
 
-##Task 2
+1. Find all words that come after a “number” like “one”, “two”, “three” etc. Pull out both the number and the word.
+
+```{r}
+tibble(sentence = sentences) %>% 
+  tidyr::extract(
+    sentence, c("article", "noun"), "(a|the) ([^ ]+)", 
+    remove = FALSE
+  )
+```
+
+2. Find all contractions. Separate out the pieces before and after the apostrophe.
+
+```{r}
+
+```
+
+
+## 14.4.5.1 Exercises
+
+1. Replace all forward slashes in a string with backslashes.
+```{r}
+str_replace(c("female/male", "am/pm"),"/","\\\\")
+
+```
+
+2. Implement a simple version of str_to_lower() using replace_all().
+```{r}
+# This function transform all the capital into lower case
+str_to_lower(c("BRITISH","COLUMBIA"))
+
+# using replace_all()
+sample <- c("BRITISH","COLUMBIA")
+str_replace_all(sample,
+            c("A"="a", "B"="b", "C"="c", "D"="d", "E"="e", "F"="f", "G"="g", "H"="h", "I"="i", "J"="j", "K"="k", "L"="l", "M"="m", "N"="n", "O"="o", "P"="p", "Q"="q", "R"="r", "S"="s", "T"="t", "U"="u", "V"="v", "W"="w", "X"="x", "Y"="y", "Z"="z"))
+
+```
+
+
+3. Switch the first and last letters in words. Which of those strings are still words?
+```{r}
+temp <- c("banana","apple","strawberry")
+str_replace(temp,"(^[a-zA-Z])([a-zA-Z]*)([a-zA-Z]$)", \\3\\2\\1)
+
+
+sentences %>% 
+  str_replace("([^ ]+) ([^ ]+) ([^ ]+)", "\\1 \\3 \\2") %>% 
+  head(5)
+```
+
+
+
+## 14.4.6.1 Exercises
+1. Split up a string like "apples, pears, and bananas" into individual components.
+we use the boundary() by word to split the strings.
+
+```{r}
+sample_string <- c("apple, pear, and bananas")
+str_view_all(sample_string, boundary("word"))
+(str_split(sample_string, boundary("word"))[[1]]) %>% 
+  knitr::kable(col.names = "split component")
+```
+
+
+2. Why is it better to split up by boundary("word") than " "?
+
+to discuss the difference, we can first applying both methods on to the same example.
+As we can see from the below result: if we are using split by word, the only return component will be the words itself, but if we use split by space " ", then it will return the word followed by the comma. 
+```{r}
+# split by words
+sample_string <- c("apple, pear, and bananas")
+str_view_all(sample_string, boundary("word"))
+(str_split(sample_string, boundary("word"))[[1]]) %>% 
+  knitr::kable(col.names = "split component")
+
+#split by " "
+sample_string <- c("apple, pear, and bananas")
+str_view_all(sample_string, " ")
+(str_split(sample_string, " ")[[1]]) %>% 
+  knitr::kable(col.names = "split component")
+```
+
+
+3. What does splitting with an empty string ("") do? Experiment, and then read the documentation.
+
+
+## 14.5.1 Exercises
+
+1. How would you find all strings containing \ with regex() vs. with fixed()?
+
+2. What are the five most common words in sentences?
+
+
+
+## 14.7.1 Exercises
+
+Find the stringi functions that:
+
+1. Count the number of words.
+2. Find duplicated strings.
+3. Generate random text.
+4. How do you control the language that stri_sort() uses for sorting?
+
+
+#Task 2
 
 
 __1__
@@ -268,28 +545,4 @@ cubic_curve_fit("France")
 cubic_curve_fit("Afghanistan")
 cubic_curve_fit("Japan")
 ```
-
-
-## Task 4 Work With the `singer` data
-
-__Use purrr to map latitude and longitude into human readable information on the band’s origin places.__
-
-First, we use head() function to visulise the singer_location dataframe. We realised that there are quite a lot of `NA` appeared in the entry. We need to get rid of these before tidy up the data. 
-```{r}
-head(singer_locations)
-```
-```{r}
-tidy_data <- singer_locations %>% 
-  filter(!is.na(latitude)|!is.na(longitude)|!is.na(city)) %>% 
-  dplyr::select(name,city,longitude,latitude)
-# while we load the library MASS together with the dplyr, we need to use dplyr::select to call this function
-head(tidy_data) %>% 
-  knitr::kable()
-```
-next we are going to map the longitude and latitude to the band's origin place, and the function used in the mapping is `map2()` and the `revgeocode()` from `ggmap` is used to reverse a geo code location using Google Maps.
-```{r}
-
-# location <- map2_chr(tidy_data$longitude[30:100],tidy_data$latitude[30:100], ~revgeocode(as.numeric(c(.x,.y)), output ="more" , source = "google"))
-```
-
 
