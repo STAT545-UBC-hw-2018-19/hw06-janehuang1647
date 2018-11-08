@@ -3,7 +3,7 @@
 
 
 This is the Repository created by Zhenyi Huang.
-In this assignment, I have attempted the Task 1 and Task 2. For better access to the assignment, I will suggest you to __download__ the html file below 👇, since the github can not render the html file properly.
+In this assignment, I have attempted the Task 1 and Task 2. For better access to the assignment, I will suggest you to [__download__](https://github.com/STAT545-UBC-students/hw06-janehuang1647/blob/master/assignment_6.html) the html file below 👇, since the github can not render the html file properly.
 
 ### Goal of the assignment
 * __Character data__ Read and work the exercises in the Strings chapter or R for Data Science.
